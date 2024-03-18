@@ -3,19 +3,18 @@ import { StringUtils, getStringInfo, toUpperCase } from "../app/Util";
 
 describe('Util test suite', () => {
 
-    describe.only('StringUtils tests', () => {
+    describe('StringUtils tests', () => {
 
         let sut: StringUtils;
 
         beforeEach(() => {
             sut = new StringUtils();
-            
         })
+
 
         it('Should return correct upperCase', () => {
             const actual = sut.toUpperCase('abc');
             expect(actual).toBe('ABC');
-            console.log('Actual Test')
         })
 
         it('Should throw error on invalid argument - function', () => {
@@ -31,7 +30,7 @@ describe('Util test suite', () => {
             }).toThrowError('Invalid argument!');
         })
 
-        it.only('Should throw error on invalid argument - try catch block', (done) => {
+        it('Should throw error on invalid argument - try catch block', (done) => {
            try {
                 sut.toUpperCase('');
                 done('GetStringInfo should throw error for invalid arg!')
