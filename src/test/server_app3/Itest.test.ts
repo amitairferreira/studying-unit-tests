@@ -1,3 +1,4 @@
+import * as generated from "../../app/server_app/data/IdGenerator";
 import { Account } from "../../app/server_app/model/AuthModel";
 import { Reservation } from "../../app/server_app/model/ReservationModel";
 import { HTTP_CODES, HTTP_METHODS } from "../../app/server_app/model/ServerModel";
@@ -5,17 +6,16 @@ import { Server } from "../../app/server_app/server/Server"
 import { makeAwesomeRequest } from "./utils/http-client";
 
 
-
-describe('Server app integration tests', ()=>{
+describe('Server app integration tests', () => {
 
     let server: Server;
 
-    beforeAll(()=>{
+    beforeAll(() => {
         server = new Server();
         server.startServer();
     });
 
-    afterAll(()=>{
+    afterAll(() => {
         server.stopServer()
     })
 
@@ -33,9 +33,9 @@ describe('Server app integration tests', ()=>{
         user: 'someUser'
     }
 
-    it('should register new user', async ()=>{
+    it('should register new user', async () => {
         const result = await fetch('http://localhost:8080/register', {
-            method:HTTP_METHODS.POST,
+            method: HTTP_METHODS.POST,
             body: JSON.stringify(someUser)
         });
         const resultBody = await result.json();
@@ -45,7 +45,7 @@ describe('Server app integration tests', ()=>{
         //console.log(`connectting to addres: ${process.env.HOST}`)
     });
 
-    it('should register new user with awesomeRequest', async ()=>{
+    it('should register new user with awesomeRequest', async () => {
         const result = await makeAwesomeRequest({
             host: 'localhost',
             port: 8080,
@@ -58,9 +58,9 @@ describe('Server app integration tests', ()=>{
     });
 
     let token: string;
-    it('should login a register user', async ()=>{
+    it('should login a register user', async () => {
         const result = await fetch('http://localhost:8080/login', {
-            method:HTTP_METHODS.POST,
+            method: HTTP_METHODS.POST,
             body: JSON.stringify(someUser)
         });
         const resultBody = await result.json();
@@ -71,9 +71,9 @@ describe('Server app integration tests', ()=>{
     });
 
     let createdReservationId: string;
-    it('should create reservation if authorized', async ()=>{
+    it('should create reservation if authorized', async () => {
         const result = await fetch('http://localhost:8080/reservation', {
-            method:HTTP_METHODS.POST,
+            method: HTTP_METHODS.POST,
             body: JSON.stringify(someReservation),
             headers: {
                 authorization: token
@@ -86,9 +86,9 @@ describe('Server app integration tests', ()=>{
         createdReservationId = resultBody.reservationId
     });
 
-    it('should get reservation if authorized', async ()=>{
+    it('should get reservation if authorized', async () => {
         const result = await fetch(`http://localhost:8080/reservation/${createdReservationId}`, {
-            method:HTTP_METHODS.GET,
+            method: HTTP_METHODS.GET,
             headers: {
                 authorization: token
             }
@@ -102,23 +102,23 @@ describe('Server app integration tests', ()=>{
         expect(resultBody).toEqual(expectedReservation);
     });
 
-    it('should create and retrieve multiple reservations if authorized', async ()=>{
+    it('should create and retrieve multiple reservations if authorized', async () => {
         await fetch('http://localhost:8080/reservation', {
-            method:HTTP_METHODS.POST,
+            method: HTTP_METHODS.POST,
             body: JSON.stringify(someReservation),
             headers: {
                 authorization: token
             }
         });
         await fetch('http://localhost:8080/reservation', {
-            method:HTTP_METHODS.POST,
+            method: HTTP_METHODS.POST,
             body: JSON.stringify(someReservation),
             headers: {
                 authorization: token
             }
         });
         await fetch('http://localhost:8080/reservation', {
-            method:HTTP_METHODS.POST,
+            method: HTTP_METHODS.POST,
             body: JSON.stringify(someReservation),
             headers: {
                 authorization: token
@@ -126,7 +126,7 @@ describe('Server app integration tests', ()=>{
         });
 
         const getAllResult = await fetch(`http://localhost:8080/reservation/all`, {
-            method:HTTP_METHODS.GET,
+            method: HTTP_METHODS.GET,
             headers: {
                 authorization: token
             }
@@ -136,9 +136,9 @@ describe('Server app integration tests', ()=>{
         expect(resultBody).toHaveLength(4);
     });
 
-    it('should update reservation if authorized', async ()=>{
+    it('should update reservation if authorized', async () => {
         const updateResult = await fetch(`http://localhost:8080/reservation/${createdReservationId}`, {
-            method:HTTP_METHODS.PUT,
+            method: HTTP_METHODS.PUT,
             body: JSON.stringify({
                 startDate: 'otherStartDate'
             }),
@@ -150,7 +150,7 @@ describe('Server app integration tests', ()=>{
         expect(updateResult.status).toBe(HTTP_CODES.OK);
 
         const getResult = await fetch(`http://localhost:8080/reservation/${createdReservationId}`, {
-            method:HTTP_METHODS.GET,
+            method: HTTP_METHODS.GET,
             headers: {
                 authorization: token
             }
@@ -159,9 +159,9 @@ describe('Server app integration tests', ()=>{
         expect(getRequestBody.startDate).toBe('otherStartDate');
     });
 
-    it('should delete reservation if authorized', async ()=>{
+    it('should delete reservation if authorized', async () => {
         const deleteResult = await fetch(`http://localhost:8080/reservation/${createdReservationId}`, {
-            method:HTTP_METHODS.DELETE,
+            method: HTTP_METHODS.DELETE,
             headers: {
                 authorization: token
             }
@@ -170,12 +170,34 @@ describe('Server app integration tests', ()=>{
         expect(deleteResult.status).toBe(HTTP_CODES.OK);
 
         const getResult = await fetch(`http://localhost:8080/reservation/${createdReservationId}`, {
-            method:HTTP_METHODS.GET,
+            method: HTTP_METHODS.GET,
             headers: {
                 authorization: token
             }
         });
         expect(getResult.status).toBe(HTTP_CODES.NOT_fOUND);
     });
+
+    it('snapshot demo', async () => {
+        jest.spyOn(generated, 'generateRandomId').mockReturnValueOnce('12345');
+        await fetch('http://localhost:8080/reservation', {
+            method: HTTP_METHODS.POST,
+            body: JSON.stringify(someReservation),
+            headers: {
+                authorization: token
+            }
+        });
+
+        const getResult = await fetch(`http://localhost:8080/reservation/12345`, {
+            method: HTTP_METHODS.GET,
+            headers: {
+                authorization: token
+            }
+        });
+        const getRequestBody: Reservation = await getResult.json();
+
+        expect(getRequestBody).toMatchSnapshot();
+        expect(getRequestBody).toMatchSnapshot();
+    })
 
 })
